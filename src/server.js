@@ -4,6 +4,7 @@ import fs from "fs";
 import { logger } from "./logger.js";
 import { build } from "./build.js";
 import mime from "mime-types";
+import { config } from "dotenv";
 
 export const handler = async (req, res) => {
   if (req.url != "/api/health" && req.url != "/c" && !req.url.endsWith(".svg")) {
@@ -43,7 +44,7 @@ export const handler = async (req, res) => {
         throw Error("No default export in", fileName, Object.keys(ee));
       }
     } catch (err) {
-      logger.warn("Failed to compile", fileName, err?.message || String(err));
+      logger.warn("Failed to compile", packageName, err?.message || String(err));
       res.setHeader("Content-Type", "text/plain");
       res.writeHead(500);
       res.end("Internal server error");
@@ -110,6 +111,7 @@ export const handler = async (req, res) => {
 };
 
 if (import.meta.url == "file://" + process.argv[1] + ".js" || import.meta.url == "file://" + process.argv[1]) {
+  config();
   const server = http.createServer(handler);
   const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 8080;
   logger.info("Starting server on", port);

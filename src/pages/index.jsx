@@ -4,6 +4,34 @@ import useSWR, { SWRConfig } from "swr";
 import { ErrorBoundary } from "react-error-boundary";
 import { BrowserRouter } from "react-router-dom";
 import { logger } from "../logger";
+import Pusher from "pusher-js";
+
+export const onPusher = (channelName, eventName, handler) => {
+  useEffect(() => {
+    let pusher = undefined;
+
+    if (process.env.PUBLIC_PUSHER_API_KEY) {
+      pusher = new Pusher(process.env.PUBLIC_PUSHER_API_KEY, {
+        cluster: "eu",
+      });
+
+      logger.info("Connecting to Pusher channel", channelName);
+      const channel = pusher.subscribe(channelName);
+      channel.bind(eventName, (data) => {
+        if (handler) {
+          handler(data);
+        }
+      });
+    }
+
+    return () => {
+      if (pusher) {
+        logger.info("Disconnecting from Pusher", pusher);
+        pusher.disconnect();
+      }
+    };
+  }, [handler]);
+};
 
 /**
  *
@@ -21,6 +49,9 @@ const ConsoleLog = forwardRef(({ items: initialItems }, ref) => {
           ...(items ? items : []),
           now.toLocaleTimeString() + "." + String(now.getMilliseconds()).padStart(3, "0") + ": " + item,
         ]);
+      },
+      clear: () => {
+        setItems([]);
       },
     }),
     [setItems]
@@ -48,6 +79,7 @@ function ErrorFallback({ error, resetErrorBoundary }) {
 
 const Page = () => {
   const consoleRef = useRef(null);
+  const [requestId, setRequestId] = useState("ping:test1:" + Date.now());
 
   const addConsoleLog = useCallback(
     (item) => {
@@ -57,17 +89,30 @@ const Page = () => {
     [consoleRef]
   );
 
-  const { data: response } = useSWR(
-    "/api/ping",
-    (key) =>
-      fetch(key, {
+  const onMessage = useCallback(
+    (event) => {
+      if (event.id === requestId) {
+        addConsoleLog(event.message);
+      }
+    },
+    [requestId, addConsoleLog]
+  );
+
+  onPusher("fetch-notify", "request", onMessage);
+
+  const { data: response, mutate } = useSWR(
+    requestId ? "/api/ping?requestId=" + requestId : null,
+    (key) => {
+      const requestId = new URL(key, "http://localhost").searchParams.get("requestId");
+      return fetch(key, {
         headers: {
-          "X-Request-Id": "ping:test1:" + Date.now(),
+          "X-Request-Id": requestId,
         },
       }).then((response) => {
         addConsoleLog("Ping response received " + response.status + ", id " + response.headers.get("x-request-id"));
         return response.json();
-      }),
+      });
+    },
     {
       onSuccess: () => {
         addConsoleLog("SWR onSuccess");
@@ -78,6 +123,12 @@ const Page = () => {
     }
   );
 
+  const ping = useCallback(() => {
+    consoleRef.current?.clear();
+    setRequestId("ping:test1:" + Date.now());
+    mutate();
+  }, [consoleRef, mutate]);
+
   useEffect(() => {
     addConsoleLog("Started");
   }, [addConsoleLog]);
@@ -87,7 +138,7 @@ const Page = () => {
       <h2>Check pusher + REST</h2>
       Ping? {response?.pong}
       <p>Initiates long HTTP request and receives progress over pusher.</p>
-      <button>Receive</button>
+      <button onClick={(event) => ping()}>Ping</button>
       <ConsoleLog ref={consoleRef} />
     </div>
   );
