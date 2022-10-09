@@ -12,6 +12,7 @@
     "postdist": "find . ! -path \"./node_modules/*\" ! -path \"./.git/*\"",
     "postvercel": "if [ \"$VERCEL\" = \"1\" ]; then rm -Rf api; ln -s .build/src/api .; fi",
     "vercel": "npm run dist",
+    "vercel-build": "echo \"Invoked before packing functions\"",
     "dev": "nodemon"
   },
   "keywords": [],
