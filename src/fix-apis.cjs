@@ -1,10 +1,11 @@
-const { patchFs } = require("fs-monkey");
 const fs = require("fs");
+/*
 const fsPromises = require("fs/promises");
 fsPromises.opendirSync;
 fsPromises.opendir = (...args) => {
   console.info("Hello", ...args);
 };
+*/
 
 const orig = fs.readFileSync;
 const opendirSync = fs.opendirSync;
@@ -78,5 +79,6 @@ const myfs = {
 
 console.info("Fix APIs!", process.cwd(), process.argv0, process.argv);
 if (process.argv[process.argv.length - 1] === "build") {
+  const { patchFs } = require("fs-monkey");
   patchFs(myfs);
 }
