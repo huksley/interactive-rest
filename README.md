@@ -2,7 +2,7 @@
 
 ## Abstract
 
-Traditionally APIs return response fast, but sometimes processing can take long time, and would be nice to have visual feedback on what is happenning at the server-side.
+Usually APIs return response fast, but sometimes processing can take long time, and would be nice to have visual feedback on what is happenning at the server-side.
 
 ## Experiment
 
