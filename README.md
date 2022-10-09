@@ -35,4 +35,5 @@ The same approach can be implemented in queue processing. Task can notify all su
 
 ### Unresolved
 
-FIXME: Processing uploaded file?
+- FIXME: Processing uploaded file?
+- FIXME: Vercel `git push` deployment fails to deploy APIs

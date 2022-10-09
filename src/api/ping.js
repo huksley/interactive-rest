@@ -11,6 +11,7 @@ export const sleep = (ms) => new Promise((resolve) => setTimeout(() => resolve()
 
 const push = (id, event) => {
   if (!singleton.pusher && process.env.PUBLIC_PUSHER_API_KEY && process.env.PUSHER_SECRET_KEY) {
+    logger.info("Creating Pusher appId", process.env.PUSHER_APP_ID);
     singleton.pusher = new Pusher({
       appId: process.env.PUSHER_APP_ID,
       key: process.env.PUBLIC_PUSHER_API_KEY,
@@ -27,7 +28,7 @@ const push = (id, event) => {
       event.id = nanoid();
     }
     logger.info("Channel", channelName, "event", eventName, "payload", event?.message);
-    singleton.pusher.trigger(channelName, eventName, event);
+    return singleton.pusher.trigger(channelName, eventName, event);
   } else {
     return Promise.resolve();
   }
