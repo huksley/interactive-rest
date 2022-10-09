@@ -15,7 +15,11 @@ export const build = (file, analyze, options) =>
 --define:process.env.NODE_ENV=\\"${process.env.NODE_ENV || "development"}\\" \
 --sourcemap ${process.env.NODE_ENV === "production" ? "--minify " : ""}\
 --jsx=automatic ${analyze ? "--analyze" : ""} ${options || ""}`;
-    logger.info("Compiling", file, "command", command);
+    if (logger.isVerbose) {
+      logger.info("Compiling", file, "command", command);
+    } else {
+      logger.info("Compiling", file);
+    }
     exec(command, { maxBuffer: 16 * 1024 * 1024, timeout: 10000 }, (err, stdout, stderr) => {
       if (err) {
         logger.warn(file, "Compilation failed", err?.code, stderr);

@@ -17,8 +17,10 @@
   "license": "ISC",
   "dependencies": {
     "dotenv": "^16.0.3",
+    "js-md5": "^0.7.3",
     "livereload": "^0.9.3",
     "mime-types": "^2.1.35",
+    "nanoid": "^4.0.0",
     "pusher": "^5.1.1-beta",
     "pusher-js": "^7.4.0",
     "react": "^18.2.0",
