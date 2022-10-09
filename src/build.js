@@ -41,7 +41,9 @@ export const buildDir = (srcDir, outDir, filter, options) =>
           if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
           }
-          fs.writeFileSync(path.resolve(dir, file), code);
+          const dstFile = path.resolve(dir, file);
+          logger.info("Writing file", dstFile);
+          fs.writeFileSync(dstFile, code);
         })
       )
   );
