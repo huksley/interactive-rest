@@ -30,10 +30,10 @@ const copyFolderRecursiveSync = (source, target, reader) => {
       const currentSource = path.join(source, file);
       const currentTarget = path.join(target, file);
       if (fs.lstatSync(currentSource).isDirectory()) {
-        logger.verbose("Copy", currentSource);
+        logger.info("Copy", currentSource);
         copyFolderRecursiveSync(currentSource, currentTarget, reader);
       } else {
-        logger.verbose("Write", currentSource);
+        logger.info("Write", currentSource);
         fs.writeFileSync(currentTarget, reader ? reader(currentSource, currentTarget) : fs.readFileSync(currentSource));
       }
     });
