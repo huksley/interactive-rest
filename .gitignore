@@ -5,5 +5,3 @@ node_modules
 dist
 .vercel
 
-# FIXME: used by Vercel, when you run vercel command
-api
