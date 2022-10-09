@@ -11,7 +11,7 @@
     "dist": "rm -Rf dist; mkdir -p dist; cp -R static/* dist; cp -R src/pages/* dist/; cp -R .build/src/pages/* dist/",
     "postdist": "find . ! -path \"./node_modules/*\" ! -path \"./.git/*\"",
     "postvercel": "if [ \"$VERCEL\" = \"111\" ]; then rm -f api; ln -s .build/src/api api; fi",
-    "vercel": "npm run build",
+    "vercel": "npm run dist",
     "dev": "nodemon"
   },
   "keywords": [],
