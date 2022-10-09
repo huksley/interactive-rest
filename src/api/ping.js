@@ -50,6 +50,8 @@ export default async (req, res) => {
   await sleep(300);
   await push(id, { progress: 100, message: "Sending now" });
   res.setHeader("Content-Type", "application/javascript");
-  res.setHeader("X-Request-Id", id);
+  if (id) {
+    res.setHeader("X-Request-Id", id);
+  }
   res.end(JSON.stringify({ pong: "Pong" }));
 };
