@@ -30,16 +30,6 @@ const deduplicate = (handler) => (event) => {
   }
 };
 
-export const onPusher = (id, eventName, handler) => {
-  useEffect(() => {
-    EventBus.start();
-    const channel = EventBus.listen(id, eventName, handler);
-    return () => {
-      EventBus.close(channel);
-    };
-  }, [handler]);
-};
-
 export const EventBus = {
   start: () => {
     if (!singleton.pusher && process.env.PUBLIC_PUSHER_API_KEY) {

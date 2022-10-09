@@ -23,8 +23,7 @@
     "keyofStringsOnly": true,
     "jsx": "react",
     "baseUrl": ".",
-    "incremental": true,
-    "paths": { "@src/*": ["./src"] }
+    "incremental": true
   },
   "include": ["types.d.ts"],
   "exclude": ["node_modules"]
