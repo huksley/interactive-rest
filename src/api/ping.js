@@ -18,10 +18,6 @@ const push = (channelName, eventName, data) => {
   }
 };
 
-export const config = {
-  runtime: "node@16",
-};
-
 /**
  * @param {IncomingMessage} res
  * @param {ServerResponse} res

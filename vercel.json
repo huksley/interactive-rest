@@ -2,5 +2,11 @@
   "installCommand": "npm install",
   "buildCommand": "npm run dist",
   "outputDirectory": "dist",
-  "devCommand": "npm run dev"
+  "devCommand": "npm run dev",
+  "functions": {
+    "api/*.js": {
+      "memory": 512,
+      "maxDuration": 10
+    }
+  }
 }
