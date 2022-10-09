@@ -8,9 +8,9 @@
     "build": "rm -Rf .build; NODE_ENV=production node src/build",
     "start": "NODE_ENV=production node src/server",
     "predist": "npm run build",
-    "dist": "rm -Rf api; rm -Rf dist; rm -Rf src/dist; mkdir -p src/dist/api; cp -R .build/src/api src/dist/; cp -R static/* src/dist; cp -R src/pages/* src/dist/; cp -R .build/src/pages/* src/dist/",
+    "dist": "rm -Rf dist; mkdir -p dist/api; cp -R .build/src/api dist/; cp -R static/* dist; cp -R src/pages/* dist/; cp -R .build/src/pages/* dist/",
     "postdist": "find . ! -path \"./node_modules/*\" ! -path \"./.git/*\"",
-    "postvercel": "if [ \"$VERCEL\" = \"1\" ]; then rm -Rf src/api; mkdir -p src/api; cp -R .build/src/api/ src/api/; fi",
+    "postvercel": "if [ \"$VERCEL\" = \"1\" ]; then rm -f api; ln -s .build/src/api api; fi",
     "vercel": "npm run dist",
     "dev": "nodemon"
   },
@@ -18,9 +18,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "dotenv": "^16.0.3",
     "js-md5": "^0.7.3",
-    "livereload": "^0.9.3",
     "mime-types": "^2.1.35",
     "nanoid": "^4.0.0",
     "pusher": "^5.1.1-beta",
@@ -32,7 +30,9 @@
     "swr": "^1.3.0"
   },
   "devDependencies": {
+    "dotenv": "^16.0.3",
     "esbuild": "^0.15.10",
+    "livereload": "^0.9.3",
     "nodemon": "^2.0.20"
   }
 }
