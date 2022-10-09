@@ -1,86 +1,45 @@
 const fs = require("fs");
-/*
-const fsPromises = require("fs/promises");
-fsPromises.opendirSync;
-fsPromises.opendir = (...args) => {
-  console.info("Hello", ...args);
-};
-*/
+const path = require("path");
 
-const orig = fs.readFileSync;
-const opendirSync = fs.opendirSync;
-const opendir = fs.opendir;
-const readdir = fs.readdir;
-const readdirSync = fs.readdirSync;
-const lstat = fs.lstat;
-const lstatSync = fs.lstatSync;
-const stat = fs.stat;
-const statSync = fs.statSync;
-const dir = process.cwd();
+const logger = console;
+exports.logger = logger;
+/* eslint-disable @typescript-eslint/no-empty-function */
+logger.verbose = process.env.LOG_VERBOSE === "1" ? logger.info : () => {};
 
-const myfs = {
-  readdir: (name, callback) => {
-    if (name === dir) {
-      console.info("readdir", name);
-      return readdir(name, (err, files) => {
-        files = [...files, "api"];
-        console.info("readdir", name, files);
-        callback(err, files);
-      });
-    } else if (name === dir + "/api") {
-      const files = readdirSync("src/api");
-      console.info("readdir", name, "return", files);
-      return callback(null, files);
-    } else {
-      //console.info("readdir", name, callback);
-      return readdir(name, callback);
+/**
+ * Copy folder recursively.
+ *
+ * @param {string} source - Source path-like
+ * @param {string} target - Target path-like
+ * @param {Function} reader - Optional file reader, for transformation
+ * @param {number} level - How dee in the folder
+ */
+const copyFolderRecursiveSync = (source, target, reader) => {
+  if (!fs.existsSync(source)) {
+    throw new Error("Not found: " + source);
+  }
+
+  const stat = fs.lstatSync(source);
+  if (stat.isDirectory()) {
+    if (!fs.existsSync(target)) {
+      fs.mkdirSync(target, { recursive: true });
     }
-  } /*
-  readdirSync: (...args) => {
-    console.info("readdirSync", ...args);
-    return readdirSync(...args);
-  },*/,
-  stat: (name, ...args) => {
-    if (name === dir + "/api") {
-      console.info("stat", name);
-      return stat(dir, ...args);
-    } else if (name.startsWith(dir + "/api/")) {
-      console.info("stat", name);
-      return stat(name.replace(dir, "src"), ...args);
-    }
-    return stat(name, ...args);
-  },
-  /*
-  statSync: (...args) => {
-    console.info("statSync", ...args);
-    return statSync(...args);
-  },
-  lstat: (...args) => {
-    console.info("lstat", ...args);
-    return lstat(...args);
-  },
-  lstatSync: (...args) => {
-    console.info("lstatSync", ...args);
-    return lstatSync(...args);
-  },
-  opendir: (...args) => {
-    console.info("opendir", ...args);
-    return opendir(...args);
-  },
-  opendirSync: (...args) => {
-    console.info("opendirSync", ...args);
-    return opendirSync(...args);
-  },
-  readFileSync: (name, ...args) => {
-    console.info("read", name);
-    return orig(name, ...args);
-  },*/
+
+    const files = fs.readdirSync(source);
+    files.forEach((file) => {
+      const currentSource = path.join(source, file);
+      const currentTarget = path.join(target, file);
+      if (fs.lstatSync(currentSource).isDirectory()) {
+        logger.verbose("Copy", currentSource);
+        copyFolderRecursiveSync(currentSource, currentTarget, reader);
+      } else {
+        logger.verbose("Write", currentSource);
+        fs.writeFileSync(currentTarget, reader ? reader(currentSource, currentTarget) : fs.readFileSync(currentSource));
+      }
+    });
+  }
 };
 
-console.info("Fix APIs!", process.cwd(), process.argv0, process.argv);
-
-// node script arg1, arg2
-if (process.argv[2] === "build") {
-  const { patchFs } = require(__dirname + "/../node_modules/fs-monkey/lib/index.js");
-  patchFs(myfs);
+if (process.env.VERCEL === "1") {
+  copyFolderRecursiveSync("src/api", "api");
 }
