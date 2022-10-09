@@ -35,7 +35,7 @@ export const PingPong = () => {
       revalidateOnFocus: false,
       onSuccess: (data) => {
         setDone(100);
-        addConsoleLog("Success " + JSON.stringify(data));
+        addConsoleLog("Response " + JSON.stringify(data));
       },
       onError: (err) => {
         addConsoleLog("Error " + (err?.message || String(err)));

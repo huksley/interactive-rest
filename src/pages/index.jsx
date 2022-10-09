@@ -12,7 +12,7 @@ const Page = () => {
       <h2>Interactive REST</h2>
 
       <p>
-        Initiates long-running HTTP request and receives progress over Pusher API.{" "}
+        Initiates a long-running HTTP request and receives progress events before response are received.{" "}
         <a href="https://github.com/huksley/interactive-rest">More information</a>
       </p>
 

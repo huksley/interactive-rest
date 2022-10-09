@@ -35,6 +35,7 @@ The same approach can be implemented in queue processing. Task can notify all su
 
 ### Unresolved
 
+- FIXED: /api folder
 - FIXME: Processing uploaded file?
 - FIXME: Vercel `git push` deployment fails to deploy APIs
 - ENABLE_VC_BUILD=1 https://github.com/vercel/vercel/issues/8063
