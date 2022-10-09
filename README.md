@@ -16,8 +16,6 @@ This example project uses Pusher API to provide update during long running API o
 6. Show progress (messages or progress bar)
 7. Receive response
 
-Obviously this is just for experimentation purposes. Currently, client side is subscribed to all events and filters them on the client side.
-
 **NOTE: This is a Proof of concept. See server-side code in [src/api/ping.js](src/api/ping.js) and client side code in [src/pages/EventBus.jsx](src/pages/EventBus.jsx)**
 
 ### Features
