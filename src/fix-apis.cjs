@@ -81,6 +81,6 @@ console.info("Fix APIs!", process.cwd(), process.argv0, process.argv);
 
 // node script arg1, arg2
 if (process.argv[2] === "build") {
-  const { patchFs } = require("fs-monkey");
+  const { patchFs } = require(__dirname + "/../node_modules/fs-monkey/lib/index.js");
   patchFs(myfs);
 }
