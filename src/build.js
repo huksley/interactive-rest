@@ -42,7 +42,7 @@ export const buildDir = (srcDir, outDir, filter, options) =>
             fs.mkdirSync(dir, { recursive: true });
           }
           const dstFile = path.resolve(dir, file);
-          logger.info("Writing file", dstFile);
+          logger.info("Writing file", dstFile, "code", code);
           fs.writeFileSync(dstFile, code);
         })
       )
