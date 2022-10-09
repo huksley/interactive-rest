@@ -12,7 +12,6 @@ logger.verbose = process.env.LOG_VERBOSE === "1" ? logger.info : () => {};
  * @param {string} source - Source path-like
  * @param {string} target - Target path-like
  * @param {Function} reader - Optional file reader, for transformation
- * @param {number} level - How dee in the folder
  */
 const copyFolderRecursiveSync = (source, target, reader) => {
   if (!fs.existsSync(source)) {
@@ -42,15 +41,17 @@ const copyFolderRecursiveSync = (source, target, reader) => {
   }
 };
 
-process.env.NODE_OPTIONS = "";
+/**
+ * Pre-populate api/ folder during Vercel build, because I like my apis in src/api
+ * @see ENABLE_VC_BUILD=1 in https://github.com/vercel/vercel/issues/8063
+ */
 if (process.env.VERCEL === "1") {
-  console.info("Here1", process.cwd(), "argv", process.argv);
+  process.env.NODE_OPTIONS = "";
+  // node vercel build ....
   if (process.argv[2] === "build") {
     if (process.cwd() === "/vercel/path0") {
-      console.info("Here");
       copyFolderRecursiveSync("/vercel/path0/src/api", "/vercel/path0/api");
     } else {
-      console.info("Here2");
       copyFolderRecursiveSync("src/api", "api");
     }
   }

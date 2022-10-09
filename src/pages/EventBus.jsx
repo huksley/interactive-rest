@@ -85,7 +85,7 @@ export const EventBus = {
   },
 };
 
-/** SWR middleware to receive events */
+/** SWR middleware to receive events, sends events to the onEvent handler in SWR config. */
 export const eventBusMiddleware = (useSWRNext) => {
   return (key, fetcher, config) => {
     if (key) {

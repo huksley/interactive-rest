@@ -18,24 +18,23 @@ This example project uses Pusher API to provide update during long running API o
 
 Obviously this is just for experimentation purposes. Currently, client side is subscribed to all events and filters them on the client side.
 
+**NOTE: This is a Proof of concept. See server-side code in [src/api/ping.js](src/api/ping.js) and client side code in [src/pages/EventBus.jsx](src/pages/EventBus.jsx)**
+
 ### Features
 
-- Serverless compatible
 - More responsive UI
+- Serverless compatible
 
 ### Drawbacks
 
 - Increased complexity
 - Adds another service into the mix
-- There is no guaranteed delivery (some events, particularly at the start and the end, might not be delivered at all, delivered out of order, delivered twice, just your normal async problems)
+- No guaranteed delivery (some events might not be delivered, delivered out of order, delivered twice, just your normal async problems)
 
 ### Queue implementation
 
-The same approach can be implemented in queue processing. Task can notify all subscribes about it current progress by sending events with a correlation ID.
+The same approach can be implemented in a queue processing (for a longer/more expensive task). Task can notify all subscribes about it current progress by sending events with a correlation ID.
 
-### Unresolved
+### Todo
 
-- FIXED: /api folder
 - FIXME: Processing uploaded file?
-- FIXME: Vercel `git push` deployment fails to deploy APIs
-- ENABLE_VC_BUILD=1 https://github.com/vercel/vercel/issues/8063
