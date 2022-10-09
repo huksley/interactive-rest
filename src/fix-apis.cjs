@@ -40,6 +40,13 @@ const copyFolderRecursiveSync = (source, target, reader) => {
   }
 };
 
+process.env.NODE_OPTIONS = "";
 if (process.env.VERCEL === "1") {
-  copyFolderRecursiveSync("/vercel/path0/src/api", "/vercel/path0/api");
+  if (process.cwd() === "/vercel/path0") {
+    console.info("Here");
+    copyFolderRecursiveSync("/vercel/path0/src/api", "/vercel/path0/api");
+  } else {
+    console.info("Here2");
+    copyFolderRecursiveSync("src/api", "api");
+  }
 }
