@@ -8,7 +8,7 @@
     "build": "rm -Rf .build; NODE_ENV=production node src/build",
     "start": "NODE_ENV=production node src/server",
     "predist": "npm run build",
-    "dist": "rm -Rf api; rm -Rf dist; mkdir -p pages; mkdir -p dist; cp -R .build/src/api/ api/; cp -R static/* dist; cp -R src/pages/* dist/; cp -R .build/src/pages/* dist/",
+    "dist": "rm -Rf api; rm -Rf dist; mkdir -p dist; cp -R .build/src/api/ src/dist/api/; cp -R static/* src/dist; cp -R src/pages/* src/dist/; cp -R .build/src/pages/* src/dist/",
     "postdist": "find . ! -path \"./node_modules/*\" ! -path \"./.git/*\"",
     "dev": "nodemon"
   },
