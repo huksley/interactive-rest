@@ -33,5 +33,5 @@ export default async (req, res) => {
   await push("fetch-notify", "request", { type: "request", id, message: "Sending now" });
   res.setHeader("Content-Type", "application/javascript");
   res.setHeader("X-Request-Id", id);
-  res.end(JSON.stringify({ pong: "pong" }));
+  res.end(JSON.stringify({ pong: "Pong" }));
 };

@@ -137,7 +137,10 @@ const Page = () => {
     <div>
       <h2>Check pusher + REST</h2>
       Ping? {response?.pong}
-      <p>Initiates long HTTP request and receives progress over pusher.</p>
+      <p>
+        Initiates long HTTP request and receives progress over Pusher API.{" "}
+        <a href="https://github.com/huksley/interactive-rest">More information</a>
+      </p>
       <button onClick={(event) => ping()}>Ping</button>
       <ConsoleLog ref={consoleRef} />
     </div>
