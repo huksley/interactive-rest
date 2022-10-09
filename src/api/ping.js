@@ -4,9 +4,7 @@ import { createHash } from "crypto";
 import { nanoid } from "nanoid";
 
 const singleton = { pusher: undefined };
-
 export const md5 = (str) => createHash("md5").update(str).digest("hex");
-
 export const sleep = (ms) => new Promise((resolve) => setTimeout(() => resolve(), ms));
 
 const push = (id, event) => {

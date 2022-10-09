@@ -1,6 +1,6 @@
 {
   "installCommand": "npm install",
-  "buildCommand": "npm run dist",
+  "buildCommand": "npm run vercel",
   "outputDirectory": "dist",
   "devCommand": "npm run dev",
   "redirects": [{ "source": "/favicon.ico", "destination": "/favicon.svg" }],
