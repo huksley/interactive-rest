@@ -19,6 +19,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aleung/fs-monkey": "^1.1.1",
     "js-md5": "^0.7.3",
     "mime-types": "^2.1.35",
     "nanoid": "^4.0.0",
@@ -33,6 +34,7 @@
   "devDependencies": {
     "dotenv": "^16.0.3",
     "esbuild": "^0.15.10",
+    "fs-monkey": "^1.0.3",
     "livereload": "^0.9.3",
     "nodemon": "^2.0.20"
   }
