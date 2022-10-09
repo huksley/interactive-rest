@@ -30,13 +30,15 @@ const copyFolderRecursiveSync = (source, target, reader) => {
       const currentSource = path.join(source, file);
       const currentTarget = path.join(target, file);
       if (fs.lstatSync(currentSource).isDirectory()) {
-        logger.info("Copy", currentSource);
+        logger.info("Copy", currentSource, "to", currentTarget);
         copyFolderRecursiveSync(currentSource, currentTarget, reader);
       } else {
-        logger.info("Write", currentSource);
+        logger.info("Write", currentSource, "to", currentTarget);
         fs.writeFileSync(currentTarget, reader ? reader(currentSource, currentTarget) : fs.readFileSync(currentSource));
       }
     });
+  } else {
+    throw new Error("Not a folder: " + source);
   }
 };
 
@@ -44,7 +46,7 @@ process.env.NODE_OPTIONS = "";
 if (process.env.VERCEL === "1") {
   console.info("Here1", process.cwd(), "argv", process.argv);
   if (process.argv[2] === "build") {
-    if (true || process.cwd() === "/vercel/path0") {
+    if (process.cwd() === "/vercel/path0") {
       console.info("Here");
       copyFolderRecursiveSync("/vercel/path0/src/api", "/vercel/path0/api");
     } else {
