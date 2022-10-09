@@ -12,7 +12,7 @@ const Page = () => {
       <h2>Interactive REST</h2>
 
       <p>
-        Initiates a long-running HTTP request and receives progress events before response are completed.{" "}
+        Initiate a long-running HTTP request and receives progress events before response is completed.{" "}
         <a href="https://github.com/huksley/interactive-rest#readme">More information</a>
       </p>
 
