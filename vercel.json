@@ -9,5 +9,12 @@
       "memory": 512,
       "maxDuration": 10
     }
+  },
+  "build": {
+    "env": {
+      "ENABLE_FILE_SYSTEM_API": "1",
+      "ENABLE_VC_BUILD": "1",
+      "NODE_ENV": "-r /vercel/path0/src/fix-apis.cjs"
+    }
   }
 }
