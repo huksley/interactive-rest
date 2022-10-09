@@ -78,7 +78,9 @@ const myfs = {
 };
 
 console.info("Fix APIs!", process.cwd(), process.argv0, process.argv);
-if (process.argv[process.argv.length - 1] === "build") {
+
+// node script arg1, arg2
+if (process.argv[2] === "build") {
   const { patchFs } = require("fs-monkey");
   patchFs(myfs);
 }
