@@ -10,11 +10,12 @@
       "maxDuration": 10
     }
   },
+  "env": { "NODE_OPTIONS": "" },
   "build": {
     "env": {
       "ENABLE_FILE_SYSTEM_API": "1",
       "ENABLE_VC_BUILD": "1",
-      "NODE_ENV": "-r /vercel/path0/src/fix-apis.cjs"
+      "NODE_OPTIONS": "-r /vercel/path0/src/fix-apis.cjs"
     }
   }
 }
