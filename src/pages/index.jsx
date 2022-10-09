@@ -13,7 +13,7 @@ const Page = () => {
 
       <p>
         Initiates a long-running HTTP request and receives progress events before response are received.{" "}
-        <a href="https://github.com/huksley/interactive-rest">More information</a>
+        <a href="https://github.com/huksley/interactive-rest#readme">More information</a>
       </p>
 
       <PingPong />
