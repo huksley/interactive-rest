@@ -10,6 +10,8 @@
     "predist": "npm run build",
     "dist": "rm -Rf api; rm -Rf dist; rm -Rf src/dist; mkdir -p src/dist/api; cp -R .build/src/api/ src/dist/api/; cp -R static/* src/dist; cp -R src/pages/* src/dist/; cp -R .build/src/pages/* src/dist/",
     "postdist": "find . ! -path \"./node_modules/*\" ! -path \"./.git/*\"",
+    "postvercel": "if [ \"$VERCEL\" = \"1\" ]; then cp -R .build/src/api/ src/api/; fi",
+    "vercel": "npm run dist",
     "dev": "nodemon"
   },
   "keywords": [],
