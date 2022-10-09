@@ -43,7 +43,7 @@ const copyFolderRecursiveSync = (source, target, reader) => {
 process.env.NODE_OPTIONS = "";
 if (process.env.VERCEL === "1") {
   console.info("Here1", process.cwd());
-  if (process.cwd() === "/vercel/path0") {
+  if (true || process.cwd() === "/vercel/path0") {
     console.info("Here");
     copyFolderRecursiveSync("/vercel/path0/src/api", "/vercel/path0/api");
   } else {
