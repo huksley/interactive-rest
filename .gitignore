@@ -3,3 +3,7 @@ node_modules
 .vscode
 .env
 dist
+.vercel
+
+# FIXME: used by Vercel, when you run vercel command
+api

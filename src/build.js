@@ -3,7 +3,7 @@ import { exec } from "child_process";
 import { logger } from "./logger.js";
 import path from "path";
 
-export const build = (file, analyze) =>
+export const build = (file, analyze, options) =>
   new Promise((resolve, reject) => {
     const st = Date.now();
     const env = Object.keys(process.env)
@@ -14,7 +14,7 @@ export const build = (file, analyze) =>
 --define:process.env.LOG_VERBOSE=\\"${process.env.LOG_VERBOSE || "0"}\\" \
 --define:process.env.NODE_ENV=\\"${process.env.NODE_ENV || "development"}\\" \
 --sourcemap ${process.env.NODE_ENV === "production" ? "--minify " : ""}\
---jsx=automatic ${analyze ? "--analyze" : ""}`;
+--jsx=automatic ${analyze ? "--analyze" : ""} ${options || ""}`;
     logger.info("Compiling", file, "command", command);
     exec(command, { maxBuffer: 16 * 1024 * 1024, timeout: 10000 }, (err, stdout, stderr) => {
       if (err) {
@@ -30,20 +30,29 @@ export const build = (file, analyze) =>
     });
   });
 
-if (import.meta.url == "file://" + process.argv[1] + ".js" || import.meta.url == "file://" + process.argv[1]) {
-  const pages = "src/pages";
-  await Promise.all(
+export const buildDir = (srcDir, outDir, filter, options) =>
+  Promise.all(
     fs
-      .readdirSync(pages)
-      .filter((file) => file.endsWith(".jsx"))
+      .readdirSync(srcDir)
+      .filter(filter)
       .map((file) =>
-        build(path.resolve(pages, file)).then((code) => {
-          const dir = path.resolve(".build", pages);
+        build(path.resolve(srcDir, file), undefined, options).then((code) => {
+          const dir = path.resolve(outDir, srcDir);
           if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
           }
-          fs.writeFileSync(path.resolve(".build", pages, file), code);
+          fs.writeFileSync(path.resolve(dir, file), code);
         })
       )
+  );
+
+if (import.meta.url == "file://" + process.argv[1] + ".js" || import.meta.url == "file://" + process.argv[1]) {
+  await buildDir("src/pages", ".build", (file) => file.endsWith(".jsx"));
+  await buildDir(
+    "src/api",
+    ".build",
+    (file) => file.endsWith(".js"),
+    // https://github.com/evanw/esbuild/issues/1921
+    "--platform=node --target=node16 --format=esm --banner:js=\"import {createRequire} from 'module';const require=createRequire(import.meta.url);\""
   );
 }
