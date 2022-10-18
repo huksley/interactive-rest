@@ -6,6 +6,47 @@ import { build } from "./build.js";
 import mime from "mime-types";
 import { config } from "dotenv";
 
+/** Write static file, or 404 if not exists */
+const writeStatic = (res, file, notFound) => {
+  let exists = fs.existsSync(file);
+  if (exists) {
+    logger.verbose("Sending", file);
+    res.setHeader("Content-Type", mime.lookup(file) || "application/octet-stream");
+    res.writeHead(200);
+    res.end(fs.readFileSync(file, { encoding: "utf-8" }));
+  } else if (notFound) {
+    return notFound();
+  } else {
+    logger.warn("Not found", file);
+    res.setHeader("Content-Type", "text/plain");
+    res.writeHead(404);
+    res.end("Not found");
+  }
+};
+
+/** Builds or sends prebuild file */
+const write = (res, file, builder) => {
+  if (process.env.NODE_ENV === "production") {
+    res.setHeader("Content-Type", mime(file) || "application/octet-stream");
+    res.writeHead(200);
+    logger.verbose("Sending static build", file);
+    res.end(fs.readFileSync(".build/" + file, { encoding: "utf-8" }));
+  } else {
+    (builder ? Promise.resolve(builder(file)) : Promise.resolve(fs.readFileSync(file, { encoding: "utf-8" })))
+      .then((output) => {
+        res.setHeader("Content-Type", mime.lookup(file) || "application/octet-stream");
+        res.writeHead(200);
+        res.end(output);
+      })
+      .catch((e) => {
+        logger.warn("Failed to compile", e?.message || String(e));
+        res.setHeader("Content-Type", "text/plain");
+        res.writeHead(500);
+        res.end("Internal server error");
+      });
+  }
+};
+
 export const handler = async (req, res) => {
   if (req.url != "/api/health" && req.url != "/c" && !req.url.endsWith(".svg")) {
     const requestMs = Date.now();
@@ -68,44 +109,18 @@ export const handler = async (req, res) => {
       res.end("OK");
     } else if (url.pathname.endsWith(".jsx")) {
       const file = "src/pages/" + url.pathname.substring(1);
-      if (process.env.NODE_ENV === "production") {
-        res.setHeader("Content-Type", "application/javascript");
-        res.writeHead(200);
-        logger.verbose("Sending static build .build/index.js");
-        res.end(fs.readFileSync(".build/" + file, { encoding: "utf-8" }));
+      write(res, file, (file) => build(file, undefined, true), "application/javascript");
+    } else if (url.pathname.endsWith(".css")) {
+      const file = "src/pages/" + url.pathname.substring(1);
+      if (fs.existsSync(file)) {
+        write(res, file, (file) => build(file, undefined, true), "text/css");
       } else {
-        build(file, true)
-          .then((output) => {
-            res.setHeader("Content-Type", "application/javascript");
-            res.writeHead(200);
-            res.end(output);
-          })
-          .catch((e) => {
-            logger.warn("Failed to compile", e?.message || String(e));
-            res.setHeader("Content-Type", "text/plain");
-            res.writeHead(500);
-            res.end("Internal server error");
-          });
+        const staticFile = path.resolve("static", url.pathname.substring(1));
+        writeStatic(res, staticFile);
       }
     } else {
       const file = path.resolve("static", url.pathname.substring(1));
-      let stat = undefined;
-      try {
-        stat = fs.statSync(file);
-      } catch (e) {
-        // Ignore
-      }
-      if (stat) {
-        logger.verbose("Sending", file);
-        res.setHeader("Content-Type", mime.lookup(file) || "application/octet-stream");
-        res.writeHead(200);
-        res.end(fs.readFileSync(file, { encoding: "utf-8" }));
-      } else {
-        logger.warn("Not found", file);
-        res.setHeader("Content-Type", "text/html");
-        res.writeHead(404);
-        res.end("Not found");
-      }
+      writeStatic(res, file);
     }
   }
 };

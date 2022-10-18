@@ -1,64 +1,115 @@
 import fs from "fs";
-import { exec } from "child_process";
 import { logger } from "./logger.js";
 import path from "path";
+import { analyzeMetafile, build as esbuild } from "esbuild";
+import { config } from "dotenv";
 
-export const build = (file, analyze, options) =>
-  new Promise((resolve, reject) => {
-    const st = Date.now();
-    const env = Object.keys(process.env)
-      .filter((key) => key.startsWith("PUBLIC_"))
-      .map((key) => `--define:process.env.${key}=\\"${process.env[key]}\\"`)
-      .join(" ");
-    const command = `./node_modules/.bin/esbuild ${file} --bundle ${env} \
---define:process.env.LOG_VERBOSE=\\"${process.env.LOG_VERBOSE || "0"}\\" \
---define:process.env.NODE_ENV=\\"${process.env.NODE_ENV || "development"}\\" \
---sourcemap ${process.env.NODE_ENV === "production" ? "--minify " : ""}\
---jsx=automatic ${analyze ? "--analyze" : ""} ${options || ""}`;
-    if (logger.isVerbose) {
-      logger.info("Compiling", file, "command", command);
-    } else {
-      logger.info("Compiling", file);
-    }
-    exec(command, { maxBuffer: 16 * 1024 * 1024, timeout: 10000 }, (err, stdout, stderr) => {
-      if (err) {
-        logger.warn(file, "Compilation failed", err?.code, stderr);
-        reject(new Error(stderr));
+const cssImportPlugin = {
+  name: "cssImportPlugin",
+  setup(build) {
+    // Redirect all paths starting with "images/" to "./public/images/"
+    build.onResolve({ filter: /.css$/ }, (args) => {
+      if (args.path && args.path.startsWith("~")) {
+        return { path: path.resolve("node_modules", args.path.substring(1)) };
       } else {
-        logger.info(file, "Compiled in", Date.now() - st, "ms, size", stdout.length, "bytes");
-        if (stderr) {
-          logger.info(stderr);
-        }
-        resolve(stdout);
+        return undefined;
       }
     });
+  },
+};
+
+export const build = (inputFile, outputFile, analyze, backend) =>
+  new Promise((resolve, reject) => {
+    const st = Date.now();
+    const prod = process.env.NODE_ENV === "production";
+    const env = backend
+      ? {}
+      : Object.assign(
+          {
+            "process.env.LOG_VERBOSE": process.env.LOG_VERBOSE || "0",
+            "process.env.NODE_ENV": process.env.NODE_ENV ? '"' + process.env.NODE_ENV + '"' : '"development"',
+          },
+          ...Object.keys(process.env)
+            .filter((key) => key.startsWith("PUBLIC_"))
+            .map((key) => ({ ["process.env." + key]: '"' + process.env[key] + '"' }))
+        );
+
+    if (logger.isVerbose && outputFile) {
+      logger.info("Compiling", inputFile, "to", outputFile);
+    } else {
+      logger.info("Compiling", inputFile, ...(logger.isVerbose ? ["env", env] : []));
+    }
+
+    esbuild({
+      entryPoints: [inputFile],
+      outfile: outputFile,
+      write: !!outputFile,
+      bundle: true,
+      define: env,
+      metafile: true,
+      sourcemap: true,
+      minify: false,
+      jsx: "automatic",
+      plugins: [cssImportPlugin],
+      loader: { ".png": "dataurl", ".svg": "dataurl" },
+      ...(backend
+        ? {
+            platform: "node",
+            target: "node16",
+            format: "esm",
+            banner: {
+              // https://github.com/evanw/esbuild/issues/1921
+              js: "import {createRequire} from 'module';const require=createRequire(import.meta.url);",
+            },
+          }
+        : {}),
+    })
+      .then((result) => {
+        if (result.errors && result.errors?.length > 0) {
+          throw new Error(result.errors.map((m) => m.text).join("; "));
+        }
+
+        if (result.warnings && result.warnings?.length > 0) {
+          result.warnings.forEach((w) => logger.warn(w.text));
+        }
+
+        if (!outputFile && (!result.outputFiles || result.outputFiles.length === 0)) {
+          throw new Error("No output files generated");
+        }
+
+        return (analyze && result.metafile ? analyzeMetafile(result.metafile) : Promise.resolve()).then((meta) => {
+          if (analyze) {
+            logger.info("Compiled", inputFile, "in", Date.now() - st, "ms", meta || "");
+          } else {
+            logger.info("Compiled", inputFile, "in", Date.now() - st, "ms");
+          }
+
+          const contents = outputFile ? true : Buffer.from(result.outputFiles[0].contents).toString("utf-8");
+          resolve(contents);
+        });
+      })
+      .catch((err) => {
+        logger.warn("Compilation failed for", inputFile, "error", err);
+        reject(new Error(err?.message || String(err)));
+      });
   });
 
-export const buildDir = (srcDir, outDir, filter, options) =>
-  Promise.all(
+export const buildDir = (srcDir, outDir, filter, api) => {
+  const dir = path.resolve(outDir, srcDir);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  return Promise.all(
     fs
       .readdirSync(srcDir)
       .filter(filter)
-      .map((file) =>
-        build(path.resolve(srcDir, file), undefined, options).then((code) => {
-          const dir = path.resolve(outDir, srcDir);
-          if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir, { recursive: true });
-          }
-          const dstFile = path.resolve(dir, file);
-          logger.info("Writing file", dstFile);
-          fs.writeFileSync(dstFile, code);
-        })
-      )
+      .map((file) => build(path.resolve(srcDir, file), path.resolve(dir, file), undefined, api))
   );
+};
 
 if (import.meta.url == "file://" + process.argv[1] + ".js" || import.meta.url == "file://" + process.argv[1]) {
+  config();
   await buildDir("src/pages", ".build", (file) => file.endsWith(".jsx"));
-  await buildDir(
-    "src/api",
-    ".build",
-    (file) => file.endsWith(".js"),
-    // https://github.com/evanw/esbuild/issues/1921
-    "--platform=node --target=node16 --format=esm --banner:js=\"import {createRequire} from 'module';const require=createRequire(import.meta.url);\""
-  );
+  await buildDir("src/pages", ".build", (file) => file.endsWith(".css"));
+  await buildDir("src/api", ".build", (file) => file.endsWith(".js"), true);
 }

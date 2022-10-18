@@ -1,7 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { useParams, useLocation, useNavigate, useMatch } from "react-router-dom";
 import queryString from "query-string";
-import { logger } from "../logger";
 
 // Hook https://usehooks.com/useRouter/
 export function useRouter() {
