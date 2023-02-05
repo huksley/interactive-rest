@@ -64,7 +64,7 @@ export const PingPong = () => {
 
   return (
     <div>
-      <p>Ping? {response?.pong}</p>
+      <p className="my-2">Ping? {response?.pong}</p>
       <progress max="100" value={done} />
       <button
         onClick={(event) => {

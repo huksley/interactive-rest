@@ -6,7 +6,7 @@ export const ErrorFallback = ({ error, resetErrorBoundary }) => {
   return (
     <div>
       <h2>React Error</h2>
-      <pre>{error?.message || String(error)}</pre>
+      <pre>Message: {error?.message || String(error)}</pre>
       <button onClick={resetErrorBoundary}>Try again</button>
     </div>
   );
