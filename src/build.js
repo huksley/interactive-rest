@@ -3,6 +3,45 @@ import { logger } from "./logger.js";
 import path from "path";
 import { analyzeMetafile, build as esbuild } from "esbuild";
 import { config } from "dotenv";
+import postcssrc from "postcss-load-config";
+import postcss from "postcss";
+
+const postcssPlugin = {
+  name: "postcssPlugin",
+  async setup(build) {
+    let postcssConfig;
+
+    try {
+      postcssConfig = await postcssrc();
+    } catch (err) {
+      if (/No PostCSS Config found/i.test(err.message)) {
+        postcssConfig = false;
+      } else {
+        throw err;
+      }
+    }
+
+    build.onLoad({ filter: new RegExp(`.css$`) }, async (args) => {
+      if (postcssConfig) {
+        const css = fs.readFileSync(args.path, "utf8");
+
+        const result = await postcss(postcssConfig.plugins).process(css, {
+          ...postcssConfig.options,
+          from: args.path,
+        });
+
+        return { contents: result.css, loader: "css" };
+      }
+
+      if (path.extname(args.path) !== ".css") {
+        const css = fs.readFileSync(args.path, "utf8");
+        return { contents: css, loader: "css" };
+      }
+
+      return { loader: "css" };
+    });
+  },
+};
 
 const cssImportPlugin = {
   name: "cssImportPlugin",
@@ -18,7 +57,7 @@ const cssImportPlugin = {
   },
 };
 
-export const build = (inputFile, outputFile, analyze, backend) =>
+export const build = (inputFile, outputFile, analyze, backend, defines) =>
   new Promise((resolve, reject) => {
     const st = Date.now();
     const prod = process.env.NODE_ENV === "production";
@@ -31,7 +70,8 @@ export const build = (inputFile, outputFile, analyze, backend) =>
           },
           ...Object.keys(process.env)
             .filter((key) => key.startsWith("PUBLIC_"))
-            .map((key) => ({ ["process.env." + key]: '"' + process.env[key] + '"' }))
+            .map((key) => ({ ["process.env." + key]: '"' + process.env[key] + '"' })),
+          defines ? defines : {}
         );
 
     if (logger.isVerbose && outputFile) {
@@ -48,9 +88,12 @@ export const build = (inputFile, outputFile, analyze, backend) =>
       define: env,
       metafile: true,
       sourcemap: true,
-      minify: false,
+      minify: prod,
       jsx: "automatic",
-      plugins: [cssImportPlugin],
+      jsxDev: true,
+      inject: inputFile.endsWith(".jsx") ? ["src/pages/react-shim.js"] : undefined,
+      plugins: [postcssPlugin],
+      format: "esm",
       loader: { ".png": "dataurl", ".svg": "dataurl" },
       ...(backend
         ? {
@@ -58,7 +101,7 @@ export const build = (inputFile, outputFile, analyze, backend) =>
             target: "node16",
             format: "esm",
             banner: {
-              // https://github.com/evanw/esbuild/issues/1921
+              // Needed for serverside modules https://github.com/evanw/esbuild/issues/1921
               js: "import {createRequire} from 'module';const require=createRequire(import.meta.url);",
             },
           }
@@ -75,6 +118,18 @@ export const build = (inputFile, outputFile, analyze, backend) =>
 
         if (!outputFile && (!result.outputFiles || result.outputFiles.length === 0)) {
           throw new Error("No output files generated");
+        }
+
+        const exports = Object.keys(result.metafile.outputs)
+          .map((key) => result.metafile.outputs[key].exports)
+          .flat(1);
+        if (!prod && inputFile.endsWith(".jsx") && !exports.includes("Page")) {
+          logger.warn("Page code does not export Page component in", inputFile);
+          return build("src/pages/_error.jsx", undefined, false, false, {
+            "globalThis.ERROR_MESSAGE": '"File ' + inputFile + ' does not export Page component"',
+          }).then((result) => {
+            resolve(result);
+          });
         }
 
         return (analyze && result.metafile ? analyzeMetafile(result.metafile) : Promise.resolve()).then((meta) => {

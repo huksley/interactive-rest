@@ -1,1 +1,5 @@
-@import url("~simpledotcss/simple.min.css");
+@import "simpledotcss/simple.min.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
